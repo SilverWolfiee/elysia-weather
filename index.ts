@@ -39,21 +39,55 @@ app.get('/weather', async({query})=>{
     
 
 function mapWeatherCode(code: number, isDay: boolean) {
+    // const suffix = 'day' 
     const suffix = isDay ? 'day' : 'night';
     
-    // 0 = Clear, 1-3 = Cloudy, 51-67 = Rain, 95+ = Storm
-    if (code === 0) return { condition: 'Clear sky', theme: `sunny-${suffix}` }
-    if (code <= 3) return { condition: 'Partially Cloudy', theme: `cloudy-${suffix}` }
-    if (code >= 51 && code <= 67) return { condition: 'Rainy', theme: `rainy-${suffix}` }
-    if (code >= 95) return { condition: 'Thunderstorm', theme: `storm-${suffix}` }
-    
-    return { condition: 'Overcast', theme: `overcast-${suffix}` }
-    
+    // 0: Clear Sky
+    if (code === 0) {
+        console.log(`condition : clear sky-${suffix}`)
+        return { condition: 'Clear Sky', theme: `clear-${suffix}` }
+    }
+
+    //Partially Cloudy (Mainly clear, partly cloudy)
+    if (code === 1 || code === 2) {
+        console.log(`condition : partially cloudy-${suffix}`)
+        return { condition: 'Partially Cloudy', theme: `cloudy-${suffix}` }
+    }
+
+    // Overcast 
+    if (code === 3 || code === 45 || code === 48) {
+        console.log(`condition : overccast-${suffix}`)
+        return { condition: 'Overcast', theme: `overcast-${suffix}` }
+    }
+
+    // 51-67, 80-82: Rainy
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        console.log(`condition : Rainy-${suffix}`)
+        return { condition: 'Rainy', theme: `rainy-${suffix}` }
+    }
+
+    // 71-77, Snowy(map to rainy temporarily)
+    if (code >= 71 && code <= 77) {
+        console.log(`condition : Rainy-${suffix}`)
+        return { condition: 'Rainy', theme: `rainy-${suffix}` } // or make a "Snowy" later
+    }
+
+    // 95-99: Thunderstorm
+    if (code >= 95) {
+        console.log(`condition : Thunderstorm-${suffix}`)
+        return { condition: 'Thunderstorm', theme: `storm-${suffix}` }
+    }
+
+    // Default Fallback
+    console.log(`condition : default-${suffix}`)
+    return { condition: 'Sunny', theme: `overcast-${suffix}` }
+    // console.log(`condition : Rainy-${suffix}`)
+    // return { condition: 'Rainy', theme: `rainy-${suffix}` }
 }
 
 app.listen({
     port: 23000,
     hostname: '0.0.0.0'
 }, () => {
-    console.log(`📡 Elysia is listening at 23000 on all interfaces`);
+    console.log(`Elysia is listening on 23000`);
 });
