@@ -36,7 +36,7 @@ app.get('/weather', async({query})=>{
     })
 
     
-    app.listen(23000)
+    
 
 function mapWeatherCode(code: number, isDay: boolean) {
     const suffix = isDay ? 'day' : 'night';
@@ -51,4 +51,9 @@ function mapWeatherCode(code: number, isDay: boolean) {
     
 }
 
-console.log(`Elysia is listening at 23000`);
+app.listen({
+    port: 23000,
+    hostname: '0.0.0.0'
+}, () => {
+    console.log(`📡 Elysia is listening at 23000 on all interfaces`);
+});
