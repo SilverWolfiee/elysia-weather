@@ -12,6 +12,26 @@ app.use(cors())
 // get weather data
 app.get('/weather', async({query})=>{
     const {lat, lon} = query 
+    let cityName = "Unknown"
+    try {
+        
+        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
+        
+        
+        const geoResponse = await fetch(url, {
+             headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" 
+            }
+        });
+        
+        const geoData: any = await geoResponse.json();
+        
+        cityName = geoData.locality || geoData.city || `Location: ${lat}, ${lon}`;
+        
+    } catch (e) {
+        console.error("Geocoding failed:", e);
+        cityName = `Location: ${lat}, ${lon}`;
+    }
     const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability`
         )
@@ -27,8 +47,9 @@ app.get('/weather', async({query})=>{
         }
     });
     const weather = mapWeatherCode(cw.weathercode, cw.is_day === 1)
-    console.log(`Return data for ${lat} ${lon}`)
+    console.log(`Return data for ${cityName} ${lat} ${lon}`)
     return {
+        location : cityName,
         temperature : Math.round(cw.temperature),
         condition : weather.condition,
         theme : weather.theme,
@@ -46,7 +67,7 @@ app.get('/weather', async({query})=>{
     })
 
     
-    
+
 
 function mapWeatherCode(code: number, isDay: boolean) {
     // const suffix = 'night' 
