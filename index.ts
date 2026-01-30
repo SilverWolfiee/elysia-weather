@@ -60,13 +60,13 @@ function mapWeatherCode(code: number, isDay: boolean) {
 
     //Partially Cloudy (Mainly clear, partly cloudy)
     if (code === 1 || code === 2) {
-        console.log(`condition : partially cloudy-${suffix}`)
-        return { condition: 'Partially Cloudy', theme: `cloudy-${suffix}` }
+        console.log(`condition : partially-cloudy-${suffix}`)
+        return { condition: 'Partially Cloudy', theme: `partially-cloudy-${suffix}` }
     }
 
     // Overcast 
     if (code === 3 || code === 45 || code === 48) {
-        console.log(`condition : overccast-${suffix}`)
+        console.log(`condition : overcast-${suffix}`)
         return { condition: 'Overcast', theme: `overcast-${suffix}` }
     }
 
