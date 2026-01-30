@@ -13,17 +13,27 @@ app.use(cors())
 app.get('/weather', async({query})=>{
     const {lat, lon} = query 
     const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability`
         )
     const data : any = await response.json()
     const cw = data.current_weather
+    const now = new Date()
+    const currentHourIndex = data.hourly.time.findIndex((t: string) => new Date(t) >= now);
+    const startIndex = currentHourIndex !== -1 ? currentHourIndex : 0;
+    const next24Hours = data.hourly.time.slice(startIndex, startIndex + 24).map((timeStr: string, i: number) => {
+        return {
+            time: new Date(timeStr).getHours() + ":00", // Format as "13:00"
+            chance: data.hourly.precipitation_probability[startIndex + i]
+        }
+    });
     const weather = mapWeatherCode(cw.weathercode, cw.is_day === 1)
     console.log(`Return data for ${lat} ${lon}`)
     return {
         temperature : Math.round(cw.temperature),
         condition : weather.condition,
         theme : weather.theme,
-        isDay:cw.is_day === 1
+        isDay:cw.is_day === 1,
+        forecast :next24Hours
         
     }
     
@@ -39,7 +49,7 @@ app.get('/weather', async({query})=>{
     
 
 function mapWeatherCode(code: number, isDay: boolean) {
-    // const suffix = 'day' 
+    // const suffix = 'night' 
     const suffix = isDay ? 'day' : 'night';
     
     // 0: Clear Sky
@@ -75,14 +85,14 @@ function mapWeatherCode(code: number, isDay: boolean) {
     // 95-99: Thunderstorm
     if (code >= 95) {
         console.log(`condition : Thunderstorm-${suffix}`)
-        return { condition: 'Thunderstorm', theme: `storm-${suffix}` }
+        return { condition: 'Thunderstorm', theme: `Thunderstorm-${suffix}` }
     }
 
     // Default Fallback
     console.log(`condition : default-${suffix}`)
     return { condition: 'Sunny', theme: `overcast-${suffix}` }
-    // console.log(`condition : Rainy-${suffix}`)
-    // return { condition: 'Rainy', theme: `rainy-${suffix}` }
+    // console.log(`condition : partially-cloudy-${suffix}`)
+    // return { condition: 'Partially Cloudy', theme: `partially-cloudy-${suffix}` }
 }
 
 app.listen({
