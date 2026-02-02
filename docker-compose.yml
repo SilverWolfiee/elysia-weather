@@ -22,7 +22,10 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   weather-backend:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: elysia-weather:latest
     container_name: elysia-weather
     restart: always
     environment:
