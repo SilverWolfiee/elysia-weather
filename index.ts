@@ -1,29 +1,33 @@
 import {Elysia, t} from "elysia"
 import os from "os"
 import {cors} from '@elysiajs/cors'
-if(os.platform() === "win32"){
-    console.log("Here's a nickel kid, GET YOURSELF A REAL OS AND STOP USING WINSLOP")
-    process.exit(1);
-}
+import {rateLimit} from 'elysia-rate-limit'
+
+// if(os.platform() === "win32"){
+//     console.log("Here's a nickel kid, GET YOURSELF A REAL OS AND STOP USING WINSLOP")
+//     process.exit(1);
+// }
 
 const app = new Elysia();
-
+app.use(rateLimit({
+    duration : 60000,
+    max : 3,
+    errorResponse : `Too many request`,
+    scoping : `global`,
+}))
 app.use(cors())
 // get weather data
 app.get('/weather', async({query})=>{
+    
     const {lat, lon} = query 
     let cityName = "Unknown"
     try {
-        
         const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
-        
-        
         const geoResponse = await fetch(url, {
              headers: {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" 
             }
         });
-        
         const geoData: any = await geoResponse.json();
         
         cityName = geoData.locality || geoData.city || `Location: ${lat}, ${lon}`;
@@ -47,7 +51,7 @@ app.get('/weather', async({query})=>{
         }
     });
     const weather = mapWeatherCode(cw.weathercode, cw.is_day === 1)
-    console.log(`Return data for ${cityName} ${lat} ${lon}`)
+    
     return {
         location : cityName,
         temperature : Math.round(cw.temperature),
@@ -57,7 +61,6 @@ app.get('/weather', async({query})=>{
         forecast :next24Hours
         
     }
-    
 },
     {
         query: t.Object({
@@ -70,7 +73,7 @@ app.get('/weather', async({query})=>{
 
 
 function mapWeatherCode(code: number, isDay: boolean) {
-    // const suffix = 'night' 
+    
     const suffix = isDay ? 'day' : 'night';
     
     // 0: Clear Sky
@@ -112,8 +115,7 @@ function mapWeatherCode(code: number, isDay: boolean) {
     // Default Fallback
     console.log(`condition : default-${suffix}`)
     return { condition: 'Sunny', theme: `overcast-${suffix}` }
-    // console.log(`condition : partially-cloudy-${suffix}`)
-    // return { condition: 'Partially Cloudy', theme: `partially-cloudy-${suffix}` }
+    
 }
 
 app.listen({

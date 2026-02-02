@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}" 
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  weather-backend:
+    build: .
+    container_name: elysia-weather
+    restart: always
+    environment:
+      - PORT=23000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.weather.rule=Host(`${DOMAIN}`)" 
+      - "traefik.http.routers.weather.entrypoints=websecure"
+      - "traefik.http.routers.weather.tls.certresolver=myresolver"
+      - "traefik.http.services.weather.loadbalancer.server.port=23000"
